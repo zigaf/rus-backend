@@ -4,14 +4,14 @@
   "description": "Backend for Ruslana Moskalenko medical website",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "echo 'No build needed for simple server'",
+    "start": "node src/simple-server.js",
+    "dev": "node src/simple-server.js",
     "migrate": "npx prisma migrate dev",
     "migrate:deploy": "npx prisma migrate deploy",
     "generate": "npx prisma generate",
     "studio": "npx prisma studio",
-    "postinstall": "npx prisma generate"
+    "postinstall": "echo 'Simple server ready'"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",

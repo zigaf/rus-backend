@@ -5,7 +5,7 @@ nixPkgs = ["nodejs-18_x", "npm-9_x"]
 cmds = ["rm -rf node_modules/.cache", "npm ci --no-cache"]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = ["echo 'Simple server - no build needed'"]
 
 [start]
 cmd = "npm run start"
