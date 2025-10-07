@@ -4,13 +4,15 @@
   "description": "Backend for Ruslana Moskalenko medical website",
   "main": "dist/server.js",
   "scripts": {
-    "build": "echo 'No build needed for postgres server'",
-    "start": "node src/postgres-server.js",
-    "dev": "node src/postgres-server.js",
+    "build": "echo 'No build needed for SQLite server'",
+    "start": "node src/main-server.js",
+    "dev": "node src/main-server.js",
     "migrate": "npx prisma migrate dev",
     "migrate:deploy": "npx prisma migrate deploy",
     "generate": "npx prisma generate",
     "studio": "npx prisma studio",
+    "init-db": "node scripts/init-db.js",
+    "setup-db": "node scripts/init-db.js",
     "postinstall": "echo 'PostgreSQL server ready'"
   },
   "dependencies": {
@@ -26,7 +28,8 @@
     "express-rate-limit": "^7.1.5",
     "compression": "^1.7.4",
     "morgan": "^1.10.0",
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "sqlite3": "^5.1.6"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
