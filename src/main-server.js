@@ -278,14 +278,16 @@ app.post('/api/test-article', (req, res) => {
   });
   
   db.run(`
-    INSERT INTO articles (title, excerpt, category, image, content, published, createdAt, updatedAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO articles (title, excerpt, category, image, content, date, readTime, published, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
     'Тестова стаття',
     'Це тестова стаття для перевірки роботи бази даних',
     'Тест',
     'https://images.unsplash.com/photo-1551076805-e1869033e561?w=800&h=600&fit=crop',
     content,
+    new Date().toLocaleDateString('uk-UA'),
+    '5 хв',
     1, // true
     new Date().toISOString(),
     new Date().toISOString()
@@ -405,17 +407,23 @@ app.get('/api/articles/:id', (req, res) => {
 });
 
 app.post('/api/articles', (req, res) => {
-  const { title, excerpt, category, image, content, published = true } = req.body;
+  const { title, excerpt, category, image, content, date, readTime, published = true } = req.body;
+  
+  // Set default values if not provided
+  const articleDate = date || new Date().toLocaleDateString('uk-UA');
+  const articleReadTime = readTime || '5 хв';
   
   db.run(`
-    INSERT INTO articles (title, excerpt, category, image, content, published, createdAt, updatedAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO articles (title, excerpt, category, image, content, date, readTime, published, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
     title,
     excerpt,
     category,
     image,
     JSON.stringify(content),
+    articleDate,
+    articleReadTime,
     published ? 1 : 0,
     new Date().toISOString(),
     new Date().toISOString()
