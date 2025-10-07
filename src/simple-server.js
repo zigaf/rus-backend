@@ -46,6 +46,17 @@ app.post('/api/auth/login', (req, res) => {
   }
 });
 
+// Get current user endpoint
+app.get('/api/auth/me', (req, res) => {
+  res.json({
+    user: {
+      id: 1,
+      email: 'admin@ruslana.com',
+      role: 'ADMIN'
+    }
+  });
+});
+
 // Simple articles endpoint
 app.get('/api/articles', (req, res) => {
   const articles = [
