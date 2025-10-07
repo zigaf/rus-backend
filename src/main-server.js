@@ -9,7 +9,12 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // SQLite database setup
-const dbPath = process.env.DATABASE_PATH || './database.sqlite';
+// Use /data directory for Railway volume persistence
+const dataDir = process.env.DATA_DIR || './data';
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+const dbPath = process.env.DATABASE_PATH || path.join(dataDir, 'database.sqlite');
 console.log('🗄️ SQLite database path:', dbPath);
 
 const db = new sqlite3.Database(dbPath, (err) => {
