@@ -4,14 +4,14 @@
   "description": "Backend for Ruslana Moskalenko medical website",
   "main": "dist/server.js",
   "scripts": {
-    "build": "echo 'No build needed for no-env server'",
-    "start": "node src/no-env-server.js",
-    "dev": "node src/no-env-server.js",
+    "build": "echo 'No build needed for postgres server'",
+    "start": "node src/postgres-server.js",
+    "dev": "node src/postgres-server.js",
     "migrate": "npx prisma migrate dev",
     "migrate:deploy": "npx prisma migrate deploy",
     "generate": "npx prisma generate",
     "studio": "npx prisma studio",
-    "postinstall": "echo 'No-env server ready'"
+    "postinstall": "echo 'PostgreSQL server ready'"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",
