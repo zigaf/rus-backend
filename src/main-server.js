@@ -56,6 +56,29 @@ const upload = multer({
   fileFilter: fileFilter
 });
 
+// Helper function to generate slug from title
+function generateSlug(title) {
+  const translitMap = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'h', 'ґ': 'g', 'д': 'd', 'е': 'e', 'є': 'ye', 'ж': 'zh', 
+    'з': 'z', 'и': 'y', 'і': 'i', 'ї': 'yi', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n',
+    'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts',
+    'ч': 'ch', 'ш': 'sh', 'щ': 'shch', 'ь': '', 'ю': 'yu', 'я': 'ya',
+    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'H', 'Ґ': 'G', 'Д': 'D', 'Е': 'E', 'Є': 'Ye', 'Ж': 'Zh',
+    'З': 'Z', 'И': 'Y', 'І': 'I', 'Ї': 'Yi', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N',
+    'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts',
+    'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Shch', 'Ь': '', 'Ю': 'Yu', 'Я': 'Ya'
+  };
+  
+  return title
+    .split('')
+    .map(char => translitMap[char] || char)
+    .join('')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .substring(0, 100);
+}
+
 // Initialize database tables
 function initializeDatabase() {
   return new Promise((resolve, reject) => {
@@ -86,6 +109,7 @@ function initializeDatabase() {
       CREATE TABLE IF NOT EXISTS articles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
+        slug TEXT UNIQUE,
         excerpt TEXT NOT NULL,
         category TEXT NOT NULL,
         image TEXT,
@@ -103,6 +127,15 @@ function initializeDatabase() {
         return;
       }
       console.log('✅ Articles table created');
+      
+      // Try to add slug column if it doesn't exist (for existing databases)
+      db.run(`ALTER TABLE articles ADD COLUMN slug TEXT UNIQUE`, (err) => {
+        if (err && !err.message.includes('duplicate column')) {
+          console.log('⚠️ Note: slug column may already exist');
+        } else if (!err) {
+          console.log('✅ Added slug column to articles table');
+        }
+      });
     });
     
     // Create gallery_images table
@@ -277,11 +310,15 @@ app.post('/api/test-article', (req, res) => {
     sections: [{ heading: 'Тест', text: 'Тестовий контент' }] 
   });
   
+  const testTitle = 'Тестова стаття ' + Date.now();
+  const testSlug = generateSlug(testTitle);
+  
   db.run(`
-    INSERT INTO articles (title, excerpt, category, image, content, date, readTime, published, createdAt, updatedAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO articles (title, slug, excerpt, category, image, content, date, readTime, published, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
-    'Тестова стаття',
+    testTitle,
+    testSlug,
     'Це тестова стаття для перевірки роботи бази даних',
     'Тест',
     'https://images.unsplash.com/photo-1551076805-e1869033e561?w=800&h=600&fit=crop',
@@ -386,10 +423,17 @@ app.get('/api/admin/articles', (req, res) => {
   });
 });
 
-app.get('/api/articles/:id', (req, res) => {
-  const articleId = parseInt(req.params.id);
+app.get('/api/articles/:idOrSlug', (req, res) => {
+  const idOrSlug = req.params.idOrSlug;
   
-  db.get('SELECT * FROM articles WHERE id = ? AND published = 1', [articleId], (err, row) => {
+  // Check if it's a number (ID) or string (slug)
+  const isId = !isNaN(parseInt(idOrSlug));
+  const query = isId 
+    ? 'SELECT * FROM articles WHERE id = ? AND published = 1'
+    : 'SELECT * FROM articles WHERE slug = ? AND published = 1';
+  const param = isId ? parseInt(idOrSlug) : idOrSlug;
+  
+  db.get(query, [param], (err, row) => {
     if (err) {
       console.error('Error fetching article:', err);
       res.status(404).json({ error: 'Article not found' });
@@ -412,12 +456,14 @@ app.post('/api/articles', (req, res) => {
   // Set default values if not provided
   const articleDate = date || new Date().toLocaleDateString('uk-UA');
   const articleReadTime = readTime || '5 хв';
+  const slug = generateSlug(title);
   
   db.run(`
-    INSERT INTO articles (title, excerpt, category, image, content, date, readTime, published, createdAt, updatedAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO articles (title, slug, excerpt, category, image, content, date, readTime, published, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
     title,
+    slug,
     excerpt,
     category,
     image,
